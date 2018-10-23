@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0  user-scalable=yes">
+		<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;" name="viewport" />
+		<link rel="stylesheet" href="./css/styles.css">
+		<title>xxx</title>
+	</head>
+	<body>
+		<div id="app" class="width">
+			<div class="tip" v-show="tipshow">
+				<div class="content">
+					{{tipText}}
+				</div>
+			</div>
+			
+			<div class="musicsong-wrapper">
+				<div>
+					<div class="musicHeader">
+						<div class="back">
+							<img src="./img/back.png"/>
+						</div>
+						<div class="name">
+							{{currentMusic.name}}
+							<div>{{currentMusic.singer}}</div>
+						</div>
+						<div class="setting">
+							<img src="./img/list-1.png"/>
+						</div>
+					</div>
+					<div class="musicContent">
+						<div class="rotateImg" :class="{'play':!playing}">
+							<img src="./img/stick_bg.png" alt="" height=140>
+						</div>
+						<div class="rotateCD" :class="{'cdRotate':!playing}">
+							<transition :name="direction=='left'? 'fade-slide-left':'fade-slide-right'">
+								<img  v-if="on" key="on" :src="currentMusic.pic">
+								<img  v-else key="off" :src="currentMusic.pic">
+							</transition>
+						</div>
+					</div>
+					<div class="musicOperation">
+						<div class="operation">
+							<div class="heart"  @click="like"></div>
+							<div class="download"></div>
+							<div class="comment"></div>
+							<div class="more"></div>
+						</div>
+						<div class="progress">
+							<div id="start">{{timer.min}}:{{timer.sec}}</div>
+							<div class="line">
+								<div class="spot"></div>
+							</div>
+							<div id="end">{{currentMusic.min}}:{{currentMusic.sec}}</div>
+						</div>
+						<div class="action">
+							<div class="switch"></div>
+							<div class="previous" @click="preLeft"></div>
+							<div class="togglePlay" @click="togglePlay" :class="{'isPlay':playing,'noPlay':!playing}"></div>
+							<div class="next" @click="nextRight"></div>
+							<div class="morelist"></div>
+						</div>
+					</div>
+				</div>
+				<div class="list">
+					<transition name="fade">
+						<div class="list-bg" @click="hidelist" v-show="listshow"></div>
+					</transition>
+					<transition name="fold">
+						<div class="list-song" v-show="listshow">
+							<div class="title" @click="nulllist">清空</div>
+							<div ref="songlistWrapper" class="ul-song">
+								<ul>
+									<li v-for="(item,index) in list" class="li border-1px" @click="playsong(index,item)">
+										<div :class="{'active':item.songname === song.songname}">
+											<span>{{index}}</span>
+											<span>{{item.songname}}</span>
+											<span>{{item.name}}</span>
+										</div>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</transition>
+				</div>
+			</div>
+		</div>
+	</body>
+	<script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.js"></script>
+	<script>
+		function setRem() {　　　　　　
+			let w = document.documentElement.clientWidth,
+　　　　　　		fz = w * 20 / 375;　　　　　　
+			document.getElementsByTagName('html')[0].style.fontSize = fz + 'px';　　　　
+		};　　　
+		Window.onload = window.onresize = setRem();
+
+		var app = new Vue({
+			el: '#app',
+			data: {
+				on:true,
+				direction:'left',
+				timer:{
+					min:'00',
+					sec:'00'
+				},
+				musicList:[
+					{
+						name:'丑八怪',
+						singer:'薛之谦',
+						pic:'http://img2.imgtn.bdimg.com/it/u=3132587451,1890133749&fm=26&gp=0.jpg',
+						min:'03',
+						sec:'12',
+						id:1
+					},
+					{
+						name:'为你我受冷风吹',
+						singer:'胡彦斌',
+						pic:'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1540312704200&di=fbdbf3b60f81c7e0ed76a689040ae556&imgtype=0&src=http%3A%2F%2Fimg3.cache.netease.com%2Fent%2F2014%2F2%2F19%2F20140219082706e188b.jpg',
+						min:'04',
+						sec:'12',
+						id:2
+					},
+					{
+						name:'沙漠骆驼',
+						singer:'未确认',
+						pic:'https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1540907318&di=97bee7651f8ceb4bc104b9b6cc5518b4&imgtype=jpg&er=1&src=http%3A%2F%2Fimgsrc.baidu.com%2Fimage%2Fc0%253Dshijue1%252C0%252C0%252C294%252C40%2Fsign%3D3b0c625372f0f736ccf34442623cd96c%2Faec379310a55b3197bacd65949a98226cffc1740.jpg',
+						min:'05',
+						sec:'12',
+						id:3
+					},
+				],
+				currentMusic:{
+					name:'丑八怪',
+					singer:'薛之谦',
+					pic:'http://img2.imgtn.bdimg.com/it/u=3132587451,1890133749&fm=26&gp=0.jpg',
+					min:'03',
+					sec:'12',
+					id:1
+				},
+				likeShow: false,
+				playing: true,
+				tipText: '',
+				tipshow:false,
+				timerName:null
+			},
+			mounted(){
+			},
+			methods: {
+				like() {
+					this.likeShow = !this.likeShow;
+					this.tipshow = !this.tipshow;
+					if(this.likeShow){
+						this.tipText = '添加喜欢成功';
+					}else {
+						this.tipText = '取消喜欢';
+					}
+					setTimeout(()=>{
+						this.tipshow = !this.tipshow;
+					},1200)
+				},
+				preLeft(){
+					this.direction = 'left';
+					this.clearTimer();
+					this.on = !this.on;
+					let musicList = this.musicList;
+					for(let i=0;i<=musicList.length;i++){
+						if(musicList[i].name == this.currentMusic.name){
+							if(i == 0){
+								this.currentMusic = musicList[musicList.length-1]
+								return false;
+							}else {
+								this.currentMusic = musicList[i-1];
+								return false;
+							}
+						}
+					}
+				},
+				clearTimer(){
+					this.timer = {
+						min:'00',
+						sec:'00'
+					};
+					clearInterval(this.timerName);
+					this.playing = true;
+				},
+				nextRight(){
+					this.direction = 'right';
+					this.clearTimer();
+					this.on = !this.on;
+					let musicList = this.musicList;
+					for(let i=0;i<=musicList.length;i++){
+						if(musicList[i].name == this.currentMusic.name){
+							if(i == musicList.length-1){
+								this.currentMusic = musicList[0]
+								return false;
+							}else {
+								this.currentMusic = musicList[i+1];
+								return false;
+							}
+						}
+					}
+				},
+				addZero(s) {  
+					return s < 10 ? '0' + s: s;
+				},
+				togglePlay() {//点击播放
+					this.playing = !this.playing;
+					if(!this.playing){//播放时候开启定时器
+						this.timerName = setInterval(()=>{
+							if(this.timer.sec >= 60){
+								this.timer.sec = 0;
+								this.timer.min = this.timer.min+1;
+							}else {
+								this.timer.sec++;
+								this.timer.sec = this.addZero(this.timer.sec)
+							}
+						},1000)
+					}else {//暂停时候清除定时器
+						clearInterval(this.timerName);
+					}
+				}
+			},
+			watch:{
+
+			}
+		})
+	</script>
+
+</html>
